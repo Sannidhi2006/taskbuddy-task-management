@@ -186,7 +186,7 @@ export const logout = (req, res) => {
   res.cookie('token', '', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: isProduction ? 'none' : 'lax',
     path: '/',
     maxAge: 0,
     expires: new Date(0),
