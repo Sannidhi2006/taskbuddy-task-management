@@ -56,7 +56,7 @@ export const DashboardPage: React.FC = () => {
   const [isConfirmingClearAll, setIsConfirmingClearAll] = useState<boolean>(false);
   const [isClearing, setIsClearing] = useState<boolean>(false);
 
-  // Helper to determine if a task is Due Today or Overdue
+  // Helper to determine if a task is Due Today or Overdue (timezone-safe using local calendar)
   const isDueTodayOrOverdue = (dueDateStr?: string | null): boolean => {
     if (!dueDateStr) return false;
     const due = new Date(dueDateStr);
@@ -68,6 +68,29 @@ export const DashboardPage: React.FC = () => {
 
     return dueDay <= today;
   };
+
+  /**
+   * Timezone-safe check: is this task's dueDate exactly TODAY (not overdue, not future)?
+   * Uses local calendar date so there is no UTC midnight shift.
+   */
+  const isDueExactlyToday = (dueDateStr?: string | null): boolean => {
+    if (!dueDateStr) return false;
+    const due = new Date(dueDateStr);
+    if (isNaN(due.getTime())) return false;
+
+    const now = new Date();
+    return (
+      due.getFullYear() === now.getFullYear() &&
+      due.getMonth() === now.getMonth() &&
+      due.getDate() === now.getDate()
+    );
+  };
+
+  // Live-derived Today's Goal values — always in sync with the tasks array
+  const todayGoalTotal = tasks.filter((t) => isDueExactlyToday(t.dueDate)).length;
+  const todayGoalCompleted = tasks.filter(
+    (t) => isDueExactlyToday(t.dueDate) && t.completed
+  ).length;
 
   const myDayRemainingCount = tasks.filter(
     (t) => !t.completed && isDueTodayOrOverdue(t.dueDate)
@@ -130,6 +153,8 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+  // NOTE: handleUpdateDailyGoal is no longer used for Today's Goal (which is auto-derived
+  // from tasks due today). It is kept for potential future use.
   const handleUpdateDailyGoal = async (newGoal: number) => {
     const updated = await updateDailyGoal(newGoal);
     setGoalData(updated);
@@ -271,10 +296,10 @@ export const DashboardPage: React.FC = () => {
       await completeTask(id);
       toast.success('🎉 Nice! One more task off your list!');
 
-      // Check if daily goal completed
-      const prevToday = goalData.tasksCompletedToday;
-      const targetGoal = goalData.dailyGoal;
-      if (targetGoal > 0 && prevToday + 1 >= targetGoal && prevToday < targetGoal) {
+      // Check if today's goal will be completed by this action (using live-derived counts)
+      // todayGoalCompleted reflects *before* this completion, so +1 = after
+      const taskDueToday = tasks.find((t) => t._id === id && isDueExactlyToday(t.dueDate));
+      if (taskDueToday && todayGoalTotal > 0 && todayGoalCompleted + 1 >= todayGoalTotal && todayGoalCompleted < todayGoalTotal) {
         toast.success("🔥 You did it! Today's goal is complete!");
       }
 
@@ -524,13 +549,12 @@ export const DashboardPage: React.FC = () => {
               />
             ) : (
               <>
-                {/* 🎯 Today's Goal Section */}
+                {/* 🎯 Today's Goal Section — live-derived from tasks due today */}
                 <section aria-label="Today's goal progress">
                   <DailyGoalProgress
-                    dailyGoal={goalData.dailyGoal}
-                    tasksCompletedToday={goalData.tasksCompletedToday}
-                    onUpdateGoal={handleUpdateDailyGoal}
-                    loading={goalLoading}
+                    dailyGoal={todayGoalTotal}
+                    tasksCompletedToday={todayGoalCompleted}
+                    loading={loading}
                   />
                 </section>
 
