@@ -13,13 +13,10 @@ import {
   type Task,
   type TaskStats,
   type TaskStreak,
-  type DailyGoalData,
   type AnalyticsData,
   getTasks,
   getTaskStats,
   getStreak,
-  getDailyGoal,
-  updateDailyGoal,
   getAnalytics,
   createTask,
   updateTask,
@@ -39,8 +36,7 @@ export const DashboardPage: React.FC = () => {
   const [stats, setStats] = useState<TaskStats>({ total: 0, completed: 0, pending: 0 });
   const [statsLoading, setStatsLoading] = useState<boolean>(true);
   const [streak, setStreak] = useState<TaskStreak>({ currentStreak: 0, bestStreak: 0 });
-  const [goalData, setGoalData] = useState<DailyGoalData>({ dailyGoal: 5, tasksCompletedToday: 0 });
-  const [goalLoading, setGoalLoading] = useState<boolean>(false);
+
   const [activeView, setActiveView] = useState<'all' | 'myDay' | 'analytics'>('all');
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState<boolean>(false);
@@ -140,27 +136,7 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  // 0c. Fetch user daily goal & tasksCompletedToday from GET /api/goals
-  const loadGoal = async () => {
-    try {
-      setGoalLoading(true);
-      const freshGoal = await getDailyGoal();
-      setGoalData(freshGoal);
-    } catch (err) {
-      console.error('Failed to load daily goal:', err);
-    } finally {
-      setGoalLoading(false);
-    }
-  };
-
-  // NOTE: handleUpdateDailyGoal is no longer used for Today's Goal (which is auto-derived
-  // from tasks due today). It is kept for potential future use.
-  const handleUpdateDailyGoal = async (newGoal: number) => {
-    const updated = await updateDailyGoal(newGoal);
-    setGoalData(updated);
-  };
-
-  // 0d. Fetch analytics data from GET /api/analytics
+  // 0c. Fetch analytics data from GET /api/analytics
   const loadAnalytics = async () => {
     try {
       setAnalyticsLoading(true);
@@ -206,18 +182,16 @@ export const DashboardPage: React.FC = () => {
     loadTasks(filtersRef.current);
     loadStats();
     loadStreak();
-    loadGoal();
     loadAnalytics();
 
     const socket = getSocket();
     socket.connect();
 
-    // Guard: refresh filtered tasks, stats, streak, daily goal, and analytics on real-time updates
+    // Guard: refresh filtered tasks, stats, streak, and analytics on real-time updates
     const handleCreated = () => {
       loadTasks(filtersRef.current);
       loadStats();
       loadStreak();
-      loadGoal();
       loadAnalytics();
     };
 
@@ -225,7 +199,6 @@ export const DashboardPage: React.FC = () => {
       loadTasks(filtersRef.current);
       loadStats();
       loadStreak();
-      loadGoal();
       loadAnalytics();
     };
 
@@ -233,7 +206,6 @@ export const DashboardPage: React.FC = () => {
       loadTasks(filtersRef.current);
       loadStats();
       loadStreak();
-      loadGoal();
       loadAnalytics();
     };
 
@@ -242,7 +214,6 @@ export const DashboardPage: React.FC = () => {
       setStats({ total: 0, completed: 0, pending: 0 });
       loadStats();
       loadStreak();
-      loadGoal();
       loadAnalytics();
     };
 
@@ -280,7 +251,6 @@ export const DashboardPage: React.FC = () => {
       await loadTasks(filtersRef.current);
       loadStats();
       loadStreak();
-      loadGoal();
       loadAnalytics();
     } catch (err) {
       const msg = getFriendlyErrorMessage(err);
@@ -306,7 +276,6 @@ export const DashboardPage: React.FC = () => {
       await loadTasks(filtersRef.current);
       loadStats();
       loadStreak();
-      loadGoal();
       loadAnalytics();
     } catch (err) {
       const msg = getFriendlyErrorMessage(err);
@@ -324,7 +293,6 @@ export const DashboardPage: React.FC = () => {
       await loadTasks(filtersRef.current);
       loadStats();
       loadStreak();
-      loadGoal();
       loadAnalytics();
     } catch (err) {
       const msg = getFriendlyErrorMessage(err);
@@ -345,7 +313,6 @@ export const DashboardPage: React.FC = () => {
       await loadTasks(filtersRef.current);
       loadStats();
       loadStreak();
-      loadGoal();
       loadAnalytics();
     } catch (err) {
       const msg = getFriendlyErrorMessage(err);
@@ -363,7 +330,6 @@ export const DashboardPage: React.FC = () => {
       await loadTasks(filtersRef.current);
       loadStats();
       loadStreak();
-      loadGoal();
       loadAnalytics();
     } catch (err) {
       const msg = getFriendlyErrorMessage(err);
@@ -384,7 +350,6 @@ export const DashboardPage: React.FC = () => {
       setIsConfirmingClearAll(false);
       loadStats();
       loadStreak();
-      loadGoal();
       loadAnalytics();
     } catch (err) {
       const msg = getFriendlyErrorMessage(err);
