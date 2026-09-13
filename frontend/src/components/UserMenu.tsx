@@ -16,7 +16,54 @@ export const UserMenu: React.FC = () => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Dynamically calculate and clamp dropdown positioning so it's always fully visible within viewport on mobile
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const adjustDropdownPosition = () => {
+      if (!dropdownRef.current) return;
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+
+      if (viewportWidth >= 640) {
+        // Desktop / tablet landscape: keep default classes
+        setDropdownStyle({});
+        return;
+      }
+
+      // Portrait mobile: responsive width
+      const targetWidth = Math.min(320, viewportWidth - 24);
+
+      // Check if standard right-0 alignment (aligning to button's right edge) causes left overflow
+      const leftIfRight0 = rect.right - targetWidth;
+
+      if (leftIfRight0 < 12) {
+        // If button is on the left side, align to left with safe margin so it never goes off-screen
+        const safeLeft = Math.max(0, 12 - rect.left);
+        setDropdownStyle({
+          left: `${safeLeft}px`,
+          right: 'auto',
+          width: 'min(320px, calc(100vw - 24px))',
+          maxWidth: 'calc(100vw - 24px)',
+        });
+      } else {
+        // Button is on the right side: safely use right: 0
+        setDropdownStyle({
+          right: '0px',
+          left: 'auto',
+          width: 'min(320px, calc(100vw - 24px))',
+          maxWidth: 'calc(100vw - 24px)',
+        });
+      }
+    };
+
+    adjustDropdownPosition();
+    window.addEventListener('resize', adjustDropdownPosition);
+    return () => window.removeEventListener('resize', adjustDropdownPosition);
+  }, [isOpen]);
 
   // Close dropdown on click outside or Escape
   useEffect(() => {
@@ -86,7 +133,7 @@ export const UserMenu: React.FC = () => {
             {initials}
           </div>
 
-          <span className="text-xs sm:text-sm font-semibold max-w-[100px] sm:max-w-[140px] truncate text-slate-100 hidden xs:inline">
+          <span className="text-xs sm:text-sm font-semibold max-w-[100px] sm:max-w-[140px] truncate text-slate-100 hidden sm:inline">
             {user?.name || 'Account'}
           </span>
 
@@ -104,7 +151,8 @@ export const UserMenu: React.FC = () => {
             role="menu"
             aria-orientation="vertical"
             aria-labelledby="user-menu-button"
-            className="absolute right-0 mt-2 w-64 rounded-2xl bg-[#0f121d]/95 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/90 py-2 z-50 animate-fadeIn"
+            style={dropdownStyle}
+            className="absolute right-0 mt-2 w-[min(320px,calc(100vw-24px))] max-w-[calc(100vw-24px)] sm:w-64 sm:right-0 sm:left-auto rounded-2xl bg-[#0f121d]/95 backdrop-blur-xl border border-white/15 shadow-2xl shadow-black/90 py-2 z-50 animate-fadeIn"
           >
             {/* Header info */}
             <div className="px-4 py-3 border-b border-white/10">

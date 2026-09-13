@@ -386,18 +386,18 @@ export const DashboardPage: React.FC = () => {
       {/* Main Container */}
       <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1 space-y-6">
         {/* Top Greeting & User Menu */}
-        <section aria-label="Welcome and User Menu" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2.5">
-              <span>Welcome back, {user?.name || 'Explorer'}</span>
-              <span className="inline-block hover:scale-125 transition-transform duration-200 cursor-default" title="Hello!">👋</span>
+        <section aria-label="Welcome and User Menu" className="flex items-center justify-between gap-3 sm:gap-4 pb-1">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2 sm:gap-2.5">
+              <span className="truncate">Welcome back, {user?.name || 'Explorer'}</span>
+              <span className="inline-block hover:scale-125 transition-transform duration-200 cursor-default shrink-0" title="Hello!">👋</span>
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 font-medium mt-1">
+            <p className="text-xs sm:text-sm text-slate-400 font-medium mt-1 truncate">
               Your live productivity overview & daily tasks
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <div className="flex items-center gap-2.5 shrink-0">
             <UserMenu />
           </div>
         </section>
